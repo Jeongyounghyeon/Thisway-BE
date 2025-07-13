@@ -18,9 +18,6 @@ public class AuthenticationConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * 이 메서드는 현재 어떻게 작동되는지 이해하지 못하고 넣어둠...
-     */
     @Bean
     AuthenticationEntryPoint restAuthEntryPoint() {
         return (request, response, authException) -> {
