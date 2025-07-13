@@ -29,6 +29,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return "/api/auth/login".equals(path);
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String token = extractToken(request);
@@ -89,11 +95,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // 이렇게 사용할지 아직 미정
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 로그인이나 회원가입 같이 JWT 검증이 필요 없는 요청은 필터를 건너뛴다.
-        String path = request.getServletPath();
-        return "/api/auth/login".equals(path);
-    }
 }

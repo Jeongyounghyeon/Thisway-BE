@@ -1,28 +1,19 @@
 package org.thisway.support.security;
 
-import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.thisway.support.security.service.CustomUserDetailsService;
 import org.thisway.support.security.utils.JwtTokenProvider;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,28 +23,7 @@ class SecurityIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private JwtTokenProvider jwtTokenUtil;
-
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
-
-    @BeforeEach
-    void setup() {
-        // 로그인 테스트용 모의 유저 설정
-        UserDetails user = User.withUsername("user@example.com")
-                .password(passwordEncoder.encode("secret"))
-                .roles("MEMBER")
-                .build();
-
-        given(customUserDetailsService.loadUserByUsername("user@example.com"))
-                .willReturn(user);
-    }
 
     @Test
     void 인증_토큰_없이_보호된_엔드포인트_접근시_401반환() throws Exception {
