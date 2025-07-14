@@ -3,22 +3,22 @@ package org.thisway.member.infrastructure;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.thisway.company.domain.Company;
 import org.thisway.member.domain.Member;
 import org.thisway.member.domain.MemberRole;
 
+import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 
-public interface MemberRepository
-        extends JpaRepository<Member, Long>, MemberQueryRepository {
-
-    Optional<Member> findByIdAndActiveTrue(Long id);
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberQueryRepository {
 
     Optional<Member> findByEmailAndActiveTrue(String email);
 
+    Optional<Member> findByEmail(String email);
+
     boolean existsByEmail(String email);
 
-    Page<Member> findAllByActiveTrueAndRoleIn(Set<MemberRole> role, Pageable pageable);
+    Page<Member> findAllByRoleIn(Collection<MemberRole> accessRoles, Pageable pageable);
 
-    long countByActiveTrueAndCompanyIdAndRole(long company, MemberRole role);
+    long countMemberByCompanyAndRoleIn(Company company, Collection<MemberRole> roles);
 }

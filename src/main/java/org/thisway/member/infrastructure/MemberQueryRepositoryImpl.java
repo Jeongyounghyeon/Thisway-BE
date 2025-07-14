@@ -12,13 +12,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
-import org.thisway.member.application.CompanyChefMemberSearchCriteria;
+import org.thisway.company.domain.Company;
 import org.thisway.member.domain.Member;
 import org.thisway.member.domain.MemberRole;
 import org.thisway.member.domain.QMember;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,19 +27,17 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Member> searchActiveMembers(
-            Set<MemberRole> role,
-            Long companyId,
-            CompanyChefMemberSearchCriteria criteria,
+    public Page<Member> searchMembers(
+            Collection<MemberRole> role,
+            Company company,
+            String memberName,
             Pageable pageable
     ) {
         QMember m = QMember.member;
         BooleanBuilder builder = new BooleanBuilder();
-        builder.and(m.active.isTrue())
-                .and(m.company.id.eq(companyId))
+        builder.and(m.company.eq(company))
                 .and(m.role.in(role));
 
-        String memberName = criteria.memberName();
         if (StringUtils.hasText(memberName))
             builder.and(m.name.containsIgnoreCase(memberName.trim()));
 

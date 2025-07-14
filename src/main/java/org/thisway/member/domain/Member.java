@@ -5,12 +5,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 import org.thisway.support.common.BaseEntity;
 import org.thisway.company.domain.Company;
 
 import java.util.Set;
 
 @Entity
+@DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
@@ -62,6 +64,13 @@ public class Member extends BaseEntity {
         return phone.getValue();
     }
 
+    public String getCompanyName() {
+        if (company == null) {
+            return null;
+        }
+        return company.getName();
+    }
+
     public void updatePassword(String password) {
         this.password = password;
     }
@@ -82,8 +91,19 @@ public class Member extends BaseEntity {
         this.memo = memo;
     }
 
+    public boolean canAccess(Member targetMember) {
+        return this.getAccessibleRoles().contains(targetMember.role);
+    }
 
-    public Set<MemberRole> getLowerOrEqualRoles() {
-        return role.getLowerOrEqualRoles();
+    private Set<MemberRole> getAccessibleRoles() {
+        return role.getAccessibleRoles();
+    }
+
+    public boolean isSameCompanyAs(Member other) {
+        if (this.company == null || other.company == null) {
+            return false;
+        }
+
+        return this.company.equals(other.company);
     }
 }

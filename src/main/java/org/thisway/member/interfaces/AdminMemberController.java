@@ -1,70 +1,81 @@
 package org.thisway.member.interfaces;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.thisway.member.application.AdminMemberService;
+import org.springframework.web.bind.annotation.*;
+import org.thisway.member.application.MemberFacade;
+import org.thisway.member.application.MemberDto;
+import org.thisway.member.application.MemberInfo;
+import org.thisway.support.security.dto.request.MemberDetails;
 
 @RestController
 @RequestMapping("/api/admin/members")
 @RequiredArgsConstructor
 public class AdminMemberController {
 
-    private final AdminMemberService adminMemberService;
+    private final MemberFacade memberFacade;
+    private final AdminMemberApiContractMapper adminMemberApiContractMapper;
+
+    @PostMapping
+    public ResponseEntity<Void> registerMember(
+            @RequestBody @Validated AdminMemberApiContract.MemberRegisterRequest request,
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
+        MemberDto.RegisterMemberRequest registerRequest = adminMemberApiContractMapper.from(request);
+        memberFacade.registerMember(registerRequest, memberDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .build();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdminMemberDetailResponse> getMemberDetail(@PathVariable Long id) {
-        AdminMemberDetailResponse response = AdminMemberDetailResponse.from(adminMemberService.getMemberDetail(id));
+    public ResponseEntity<AdminMemberApiContract.MemberDetailResponse> getMemberDetail(
+            @PathVariable Long id,
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
+        MemberInfo.Member member = memberFacade.retrieveMember(id, memberDetails.getUsername());
+        AdminMemberApiContract.MemberDetailResponse response = adminMemberApiContractMapper.toMemberDetailResponse(member);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }
 
     @GetMapping
-    public ResponseEntity<AdminMembersResponse> getMembers(
-            @PageableDefault Pageable pageable
+    public ResponseEntity<AdminMemberApiContract.MembersResponse> getMembers(
+            @PageableDefault Pageable pageable,
+            @AuthenticationPrincipal MemberDetails memberDetails
     ) {
-        AdminMembersResponse response = AdminMembersResponse.from(adminMemberService.getMembers(pageable));
+        Page<MemberInfo.Member> members = memberFacade.retrieveMembers(memberDetails.getUsername(), pageable);
+        AdminMemberApiContract.MembersResponse response = adminMemberApiContractMapper.toMembersResponse(members);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }
 
-    @PostMapping
-    public ResponseEntity<Void> registerMember(
-            @RequestBody @Validated AdminMemberRegisterRequest request
-    ) {
-        adminMemberService.registerMember(request.toMemberRegisterInput());
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .build();
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateMember(
             @PathVariable long id,
-            @RequestBody @Validated AdminMemberUpdateRequest request
+            @RequestBody @Validated AdminMemberApiContract.MemberUpdateRequest request,
+            @AuthenticationPrincipal MemberDetails memberDetails
     ) {
-        adminMemberService.updateMember(request.toMemberUpdateInput(id));
+        MemberDto.UpdateMemberRequest updateCommand = adminMemberApiContractMapper.from(request, id);
+        memberFacade.updateMember(updateCommand, memberDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-        adminMemberService.deleteMember(id);
+    public ResponseEntity<Void> deleteMember(
+            @PathVariable Long id,
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
+        memberFacade.deleteMember(id, memberDetails.getUsername());
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .build();
