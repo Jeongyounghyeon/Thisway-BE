@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thisway.vehicle.log.application.GpsLogService;
 import org.thisway.vehicle.log.application.LogService;
+import org.thisway.vehicle.log.application.TemporaryLogFacade;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/logs")
 @RequiredArgsConstructor
 public class LogController {
+
+    private final TemporaryLogFacade logFacade;
 
     private final LogService logService;
     private final GpsLogService gpsLogService;
@@ -28,10 +31,10 @@ public class LogController {
     }
 
     @PostMapping("/power")
-    public ResponseEntity<LogResponse> receivePowerLog(@RequestBody PowerLogRequest request) {
-        logService.savePowerLog(request);
+    public ResponseEntity<LogResponse> receivePowerLog(@RequestBody LogDto.PowerLogRequest request) {
+        logFacade.receivePowerLog(request.toUseCase());
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new LogResponse("000", "Success", request.mdn()));
+                .body(new LogResponse("000", "Success", request.getMdn()));
     }
 
     @PostMapping("/geofence")

@@ -15,10 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.thisway.vehicle.log.domain.GeofenceLogData;
-import org.thisway.vehicle.log.domain.GpsLogData;
-import org.thisway.vehicle.log.domain.GpsStatus;
-import org.thisway.vehicle.log.domain.PowerLogData;
+import org.thisway.vehicle.log.domain.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LogRepositoryTest {
@@ -67,9 +64,9 @@ public class LogRepositoryTest {
     @Test
     @DisplayName("시동 로그 저장 테스트")
     void 시동_로그_저장_테스트() {
-        PowerLogData powerLogData = new PowerLogData(
-                VEHICLE_ID,
+        LogCommand.PowerLogSaveInput powerLogData = new LogCommand.PowerLogSaveInput(
                 MDN,
+                VEHICLE_ID,
                 true,
                 LocalDateTime.now(),
                 GpsStatus.NORMAL,

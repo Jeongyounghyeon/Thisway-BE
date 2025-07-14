@@ -5,10 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.thisway.vehicle.log.domain.GeofenceLogData;
-import org.thisway.vehicle.log.domain.GpsLogData;
-import org.thisway.vehicle.log.domain.GpsStatus;
-import org.thisway.vehicle.log.domain.PowerLogData;
+import org.thisway.vehicle.log.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -24,16 +21,16 @@ public class LogRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void savePowerLog(PowerLogData powerLogData) {
+    public void savePowerLog(LogCommand.PowerLogSaveInput powerLogData) {
         Object[] powerLogParams = new Object[]{
-                powerLogData.vehicleId(),
-                powerLogData.mdn(),
-                powerLogData.powerStatus(),
-                powerLogData.powerTime(),
-                powerLogData.gpsStatus().getCode(),
-                powerLogData.latitude(),
-                powerLogData.longitude(),
-                powerLogData.totalTripMeter()
+                powerLogData.getVehicleId(),
+                powerLogData.getMdn(),
+                powerLogData.isPowerStatus(),
+                powerLogData.getPowerTime(),
+                powerLogData.getGpsStatus().getCode(),
+                powerLogData.getLatitude(),
+                powerLogData.getLongitude(),
+                powerLogData.getTotalTripMeter()
         };
 
         String powerLogSql = "INSERT INTO power_log ("

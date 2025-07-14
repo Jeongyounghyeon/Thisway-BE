@@ -1,5 +1,6 @@
-package org.thisway.vehicle.triplog.application;
+package org.thisway.vehicle.triplog.domain;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,17 +12,17 @@ import org.thisway.vehicle.application.VehicleService;
 import org.thisway.vehicle.interfaces.VehicleResponse;
 import org.thisway.vehicle.log.application.LogService;
 import org.thisway.vehicle.log.domain.GpsLogData;
-import org.thisway.vehicle.triplog.domain.*;
 import org.thisway.vehicle.triplog.infrastructure.TripLogRepository;
 import org.thisway.vehicle.triplog.interfaces.CurrentTripLogResponse;
 import org.thisway.vehicle.triplog.interfaces.TripLogDetailResponse;
-import org.thisway.vehicle.triplog.interfaces.TripLogsResponse;
+import org.thisway.vehicle.triplog.interfaces.TripLogDto;
 import org.thisway.vehicle.triplog.interfaces.VehicleDetailResponse;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class TripLogServiceImpl implements TripLogService {
@@ -29,22 +30,28 @@ public class TripLogServiceImpl implements TripLogService {
     private final VehicleService vehicleService;
     private final LogService logService;
     private final TripLogRepository tripLogRepository;
-    private final ReverseGeocodingConverter reverseGeocodingConverter;
+
+    private final TripLogStore tripLogStore;
+    private final TripLogReader tripLogReader;
 
     public TripLogServiceImpl(
             VehicleService vehicleService,
             @Lazy LogService logService,
             TripLogRepository tripLogRepository,
-            ReverseGeocodingConverter reverseGeocodingConverter
+            TripLogStore tripLogStore,
+            TripLogReader tripLogReader
     ) {
         this.vehicleService = vehicleService;
         this.logService = logService;
         this.tripLogRepository = tripLogRepository;
-        this.reverseGeocodingConverter = reverseGeocodingConverter;
+        this.tripLogStore = tripLogStore;
+        this.tripLogReader = tripLogReader;
     }
 
     @Override
     public VehicleDetailResponse getVehicleDetails(Long vehicleId) {
+        // 1. vehicleId로 vehicle에 대한 정보 가져오기
+        // 2. vehicleId로 현재 운행 정보와
         VehicleResponse vehicleResponse = vehicleService.getVehicleDetail(vehicleId);
         List<TripLog> tripLogs = tripLogRepository.findTop6ByVehicleIdOrderByStartTimeDesc(vehicleId);
         CurrentDrivingInfo currentDrivingInfo = null;
@@ -81,10 +88,10 @@ public class TripLogServiceImpl implements TripLogService {
     }
 
     @Override
-    public TripLogsResponse findTripLogs(Long companyId, Pageable pageable) {
+    public TripLogDto.TripLogResponse findTripLogs(Long companyId, Pageable pageable) {
         Page<TripLog> TripLogs = tripLogRepository.findAllByCompanyAndActiveTrueOrderByStartTimeDesc(companyId, pageable);
 
-        return TripLogsResponse.from(TripLogs);
+        return new TripLogDto.TripLogResponse(TripLogs);
     }
 
     @Override
@@ -116,50 +123,19 @@ public class TripLogServiceImpl implements TripLogService {
     }
 
     @Override
-    @Transactional
-    public void saveTripLog(TripLogSaveInput tripLogSaveInput) {
-        TripLog tripLog;
-        ReverseGeocodeResult address = reverseGeocodingConverter.convertToAddress(tripLogSaveInput.latitude(), tripLogSaveInput.longitude());
-
-        if (tripLogSaveInput.offTime() == null) {
-            tripLog = TripLog.builder()
-                    .vehicle(tripLogSaveInput.vehicle())
-                    .startTime(tripLogSaveInput.onTime())
-                    .totalTripMeter(tripLogSaveInput.totalTripMeter())
-                    .onLatitude(tripLogSaveInput.latitude())
-                    .onLongitude(tripLogSaveInput.longitude())
-                    .onAddress(address.addr())
-                    .onAddrDetail(address.addrDetail())
-                    .active(false)
-                    .build();
+    public void saveTripLog(TripLogCommand.TripLogSaveInput input) {
+        if (input.getOffTime() == null) {
+            tripLogStore.storeTripLog(Boolean.FALSE, input);
         } else {
-            tripLog = tripLogRepository.findByVehicleIdAndStartTime(tripLogSaveInput.vehicle().getId(), tripLogSaveInput.onTime());
+            TripLog tripLog = tripLogReader.findTripLogByOnTime(input.getVehicle().getId(), input.getOnTime());
 
             if (tripLog == null) {
-                tripLog = TripLog.builder()
-                        .vehicle(tripLogSaveInput.vehicle())
-                        .startTime(tripLogSaveInput.onTime())
-                        .endTime(tripLogSaveInput.offTime())
-                        .totalTripMeter(0)
-                        .offLatitude(tripLogSaveInput.latitude())
-                        .offLongitude(tripLogSaveInput.longitude())
-                        .offAddress(address.addr())
-                        .offAddrDetail(address.addrDetail())
-                        .active(true)
-                        .build();
-            } else {
-                tripLog.finishTrip(
-                        tripLogSaveInput.offTime(),
-                        tripLogSaveInput.totalTripMeter(),
-                        tripLogSaveInput.latitude(),
-                        tripLogSaveInput.longitude(),
-                        address.addr(),
-                        address.addrDetail()
-                );
+                tripLogStore.storeTripLog(Boolean.TRUE, input);
+                return;
             }
-        }
 
-        tripLogRepository.save(tripLog);
+            tripLogStore.updateTripLog(tripLog, input);
+        }
     }
 
 }

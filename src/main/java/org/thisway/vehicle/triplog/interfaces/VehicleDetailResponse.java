@@ -3,15 +3,16 @@ package org.thisway.vehicle.triplog.interfaces;
 import org.thisway.vehicle.interfaces.VehicleResponse;
 import org.thisway.vehicle.triplog.domain.CurrentDrivingInfo;
 import org.thisway.vehicle.triplog.domain.TripLog;
-import org.thisway.vehicle.triplog.domain.TripLogBriefInfo;
+import org.thisway.vehicle.triplog.domain.TripLogInfo;
 
 import java.util.List;
 
 public record VehicleDetailResponse(
         VehicleResponse vehicleResponse,
         CurrentDrivingInfo currentDrivingInfo,
-        List<TripLogBriefInfo> tripLogBriefInfos
+        List<TripLogInfo.TripLogBriefInfo> tripLogBriefInfos
 ) {
+
     public static VehicleDetailResponse from(
             VehicleResponse vehicleResponse,
             CurrentDrivingInfo currentDrivingInfo,
@@ -21,7 +22,7 @@ public record VehicleDetailResponse(
                 vehicleResponse,
                 currentDrivingInfo,
                 tripLogs.stream()
-                        .map(TripLogBriefInfo::from)
+                        .map(TripLogInfo.TripLogBriefInfo::new)
                         .toList()
         );
     }

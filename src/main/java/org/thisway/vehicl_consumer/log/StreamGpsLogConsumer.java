@@ -8,7 +8,7 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Component;
 import org.thisway.vehicle.log.interfaces.GpsLogRequest;
 import org.thisway.support.logging.constant.MdcKeys;
-import org.thisway.vehicle.triplog.application.StreamCoordinatesService;
+import org.thisway.vehicle.triplog.domain.StreamCoordinatesService;
 
 import java.util.Map;
 

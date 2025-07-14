@@ -9,14 +9,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thisway.emulator.domain.Emulator;
 import org.thisway.emulator.infrastructure.EmulatorRepository;
+import org.thisway.vehicle.log.domain.LogCommand;
+import org.thisway.vehicle.log.interfaces.LogDto;
 import org.thisway.vehicle.log.util.LogDataConverter;
 import org.thisway.vehicle.log.domain.GeofenceLogData;
-import org.thisway.vehicle.log.domain.PowerLogData;
 import org.thisway.vehicle.log.interfaces.GeofenceLogRequest;
-import org.thisway.vehicle.log.interfaces.PowerLogRequest;
 import org.thisway.vehicle.log.infrastructure.LogRepository;
-import org.thisway.vehicle.triplog.domain.TripLogSaveInput;
-import org.thisway.vehicle.triplog.application.TripLogServiceImpl;
+import org.thisway.vehicle.triplog.domain.TripLogCommand;
+import org.thisway.vehicle.triplog.domain.TripLogServiceImpl;
 import org.thisway.vehicle.domain.Vehicle;
 import org.thisway.vehicle.application.VehicleService;
 
@@ -55,8 +55,8 @@ public class LogServiceTest {
         when(vehicle.getId()).thenReturn(VEHICLE_ID);
     }
 
-    private PowerLogRequest createValidPowerLogRequest() {
-        return new PowerLogRequest(
+    private LogUseCase.PowerLogInputUseCase createValidPowerLogRequest() {
+        return new LogUseCase.PowerLogInputUseCase(
                 VALID_MDN,
                 "A001",
                 "6",
@@ -72,8 +72,8 @@ public class LogServiceTest {
                 "10000");
     }
 
-    private PowerLogRequest createValidPowerLogRequestWithOffTime() {
-        return new PowerLogRequest(
+    private LogUseCase.PowerLogInputUseCase createValidPowerLogRequestWithOffTime() {
+        return new LogUseCase.PowerLogInputUseCase(
                 VALID_MDN,
                 "A001",
                 "6",
@@ -115,28 +115,30 @@ public class LogServiceTest {
         @Test
         @DisplayName("유효한 요청 시 시동 로그 저장 성공 테스트")
         void 유효한_요청이라면_시동로그를_저장해야한다() {
-            PowerLogRequest request = createValidPowerLogRequest();
+            LogUseCase.PowerLogInputUseCase request = createValidPowerLogRequest();
+            LogCommand.PowerLogSaveInput input = new LogCommand.PowerLogSaveInput(request, vehicle.getId());
             setupMocks();
             LocalDateTime powerTime = LocalDateTime.of(2021, 9, 1, 9, 20, 0);
             when(converter.convertDateTimeWithSec(anyString())).thenReturn(powerTime);
             when(vehicleService.getVehicleById(VEHICLE_ID)).thenReturn(vehicle);
 
-            logService.savePowerLog(request);
-            verify(logRepository).savePowerLog(any(PowerLogData.class));
-            verify(tripLogService).saveTripLog(any(TripLogSaveInput.class));
+            logService.savePowerLog(input, vehicle);
+            verify(logRepository).savePowerLog(any(LogCommand.PowerLogSaveInput.class));
+            verify(tripLogService).saveTripLog(any(TripLogCommand.TripLogSaveInput.class));
         }
 
         @Test
         @DisplayName("시동 ON로그 저장시 Vehicle 시동 상태 true 변경테스트")
         void 시동_ON시_Vehicle_powerState가_true로_변경되어야한다() {
-            PowerLogRequest request = createValidPowerLogRequest();
+            LogUseCase.PowerLogInputUseCase request = createValidPowerLogRequest();
+            LogCommand.PowerLogSaveInput input = new LogCommand.PowerLogSaveInput(request, vehicle.getId());
             setupMocks();
             LocalDateTime powerTime = LocalDateTime.of(2021, 9, 1, 9, 20, 0);
             when(converter.convertDateTimeWithSec(anyString())).thenReturn(powerTime);
             when(vehicleService.getVehicleById(VEHICLE_ID)).thenReturn(vehicle);
             when(vehicle.isPowerOn()).thenReturn(true);
 
-            logService.savePowerLog(request);
+            logService.savePowerLog(input, vehicle);
 
             verify(vehicle).updatePowerOn(true);
             verify(vehicleService).saveVehicle(vehicle);
@@ -146,14 +148,15 @@ public class LogServiceTest {
         @Test
         @DisplayName("시동 OFF로그 저장시 Vehicle 시동 상태 false 변경테스트")
         void 시동_OFF시_Vehicle_powerState가_false로_변경되어야한다() {
-            PowerLogRequest request = createValidPowerLogRequestWithOffTime();
+            LogUseCase.PowerLogInputUseCase request = createValidPowerLogRequestWithOffTime();
+            LogCommand.PowerLogSaveInput input = new LogCommand.PowerLogSaveInput(request, vehicle.getId());
             setupMocks();
             LocalDateTime powerTime = LocalDateTime.of(2021, 9, 1, 10, 20, 0);
             when(converter.convertDateTimeWithSec(anyString())).thenReturn(powerTime);
             when(vehicleService.getVehicleById(VEHICLE_ID)).thenReturn(vehicle);
             when(vehicle.isPowerOn()).thenReturn(false);
 
-            logService.savePowerLog(request);
+            logService.savePowerLog(input, vehicle);
 
             verify(vehicle).updatePowerOn(false);
             verify(vehicleService).saveVehicle(vehicle);

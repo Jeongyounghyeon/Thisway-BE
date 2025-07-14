@@ -15,8 +15,9 @@ import org.thisway.support.common.CustomException;
 import org.thisway.support.common.ErrorCode;
 import org.thisway.support.security.dto.request.MemberDetails;
 import org.thisway.support.security.utils.JwtTokenUtil;
-import org.thisway.vehicle.triplog.application.StreamCoordinatesService;
-import org.thisway.vehicle.triplog.application.TripLogService;
+import org.thisway.vehicle.triplog.application.TripLogFacade;
+import org.thisway.vehicle.triplog.domain.StreamCoordinatesService;
+import org.thisway.vehicle.triplog.domain.TripLogService;
 
 import java.time.LocalDateTime;
 
@@ -26,47 +27,43 @@ import java.time.LocalDateTime;
 @Slf4j
 public class TripLogController {
 
-    private final TripLogService tripLogService;
-    private final StreamCoordinatesService streamCoordinatesService;
+    private final TripLogFacade tripLogFacade;
 
     private final JwtTokenUtil jwtTokenUtil;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<VehicleDetailResponse> getVehicleDetailTripLogs(@PathVariable Long id) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(tripLogService.getVehicleDetails(id));
-    }
+    /*
+     vehicleController로 이전 예정
+     */
+//    @GetMapping("/{id}")
+//    public ResponseEntity<VehicleDetailResponse> getVehicleDetailTripLogs(@PathVariable Long id) {
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(tripLogFacade.getVehicleDetails(id));
+//    }
 
-    @GetMapping("/current/{id}")
-    public ResponseEntity<CurrentTripLogResponse> getCurrentGpsLogs(
-            @PathVariable Long id,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time
-    ) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(tripLogService.getCurrentGpsLogs(id, time));
-    }
-
-    @GetMapping(value = "/current/stream/{id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter getVehicleCurrentGpsLogsSseEmitter(@PathVariable Long id, @RequestParam("token") String token) {
-        if (!jwtTokenUtil.isValid(token)) {
-            throw new CustomException(ErrorCode.AUTH_UNAUTHENTICATED);
-        }
-        return streamCoordinatesService.createStreamForVehicle(id, jwtTokenUtil.getUsernameFromToken(token));
-    }
+    /*
+     vehicleController로 이전 예정
+     */
+//    @GetMapping(value = "/current/stream/{id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+//    public SseEmitter getCurrentGpsLogsSseEmitter(@PathVariable Long id, @RequestParam("token") String token) {
+//        if (!jwtTokenUtil.isValid(token)) {
+//            throw new CustomException(ErrorCode.AUTH_UNAUTHENTICATED);
+//        }
+//        return streamCoordinatesService.createStreamForVehicle(id, jwtTokenUtil.getUsernameFromToken(token));
+//    }
 
     @GetMapping
-    public ResponseEntity<TripLogsResponse> getAllTripLogs(
+    public ResponseEntity<TripLogDto.TripLogResponse> getAllTripLogsInCompany(
             @AuthenticationPrincipal MemberDetails memberDetails,
             @PageableDefault Pageable pageable
     ) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(tripLogService.findTripLogs(memberDetails.getCompanyId(), pageable));
+                .body(tripLogFacade.findTripLogs(memberDetails.getCompanyId(), pageable));
     }
 
     @GetMapping("/detail/{id}")
     public ResponseEntity<TripLogDetailResponse> getTripLogDetail(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(tripLogService.getTripLogDetails(id));
+                .body(tripLogFacade.getTripLogDetails(id));
     }
 
     @GetMapping(value = "/detail/stream/{id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -75,6 +72,6 @@ public class TripLogController {
         if (!jwtTokenUtil.isValid(token)) {
             throw new CustomException(ErrorCode.AUTH_UNAUTHENTICATED);
         }
-        return streamCoordinatesService.createStreamForTripLog(id);
+        return tripLogFacade.createStreamForTripLog(id);
     }
 }

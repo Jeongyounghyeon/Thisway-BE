@@ -1,11 +1,9 @@
-package org.thisway.vehicle.triplog.application;
+package org.thisway.vehicle.triplog.domain;
 
 import org.springframework.data.domain.Pageable;
-import org.thisway.vehicle.triplog.domain.CoordinatesInfo;
-import org.thisway.vehicle.triplog.domain.TripLogSaveInput;
 import org.thisway.vehicle.triplog.interfaces.CurrentTripLogResponse;
 import org.thisway.vehicle.triplog.interfaces.TripLogDetailResponse;
-import org.thisway.vehicle.triplog.interfaces.TripLogsResponse;
+import org.thisway.vehicle.triplog.interfaces.TripLogDto;
 import org.thisway.vehicle.triplog.interfaces.VehicleDetailResponse;
 
 import java.time.LocalDateTime;
@@ -17,13 +15,13 @@ public interface TripLogService {
 
     CurrentTripLogResponse getCurrentGpsLogs(Long vehicleId, LocalDateTime time);
 
-    TripLogsResponse findTripLogs(Long companyId, Pageable pageable);
+    TripLogDto.TripLogResponse findTripLogs(Long companyId, Pageable pageable);
 
     TripLogDetailResponse getTripLogDetails(Long tripId);
 
     LocalDateTime getLastStartTimeByVehicle(Long vehicleId);
 
-    void saveTripLog(TripLogSaveInput tripLogSaveInput);
-
     List<CoordinatesInfo> getGpsLogsInTripLog(Long tripId);
+
+    void saveTripLog(TripLogCommand.TripLogSaveInput input);
 }

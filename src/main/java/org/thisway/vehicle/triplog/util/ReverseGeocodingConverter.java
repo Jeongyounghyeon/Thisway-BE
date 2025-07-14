@@ -1,4 +1,4 @@
-package org.thisway.vehicle.triplog.domain;
+package org.thisway.vehicle.triplog.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

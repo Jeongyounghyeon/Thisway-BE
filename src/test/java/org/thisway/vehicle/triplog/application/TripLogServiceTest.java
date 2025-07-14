@@ -9,7 +9,8 @@ import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.thisway.vehicle.log.infrastructure.LogRepository;
-import org.thisway.vehicle.triplog.domain.ReverseGeocodingConverter;
+import org.thisway.vehicle.triplog.util.ReverseGeocodingConverter;
+import org.thisway.vehicle.triplog.domain.TripLogServiceImpl;
 import org.thisway.vehicle.triplog.infrastructure.TripLogRepository;
 import org.thisway.vehicle.application.VehicleService;
 

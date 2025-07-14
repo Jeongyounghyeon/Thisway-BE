@@ -1,4 +1,4 @@
-package org.thisway.vehicle.triplog.application;
+package org.thisway.vehicle.triplog.domain;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,6 @@ import org.thisway.emulator.application.EmulatorService;
 import org.thisway.vehicle.log.domain.GpsLogData;
 import org.thisway.vehicle.log.interfaces.GpsLogEntry;
 import org.thisway.vehicle.log.application.LogService;
-import org.thisway.vehicle.triplog.domain.CoordinatesInfo;
 import org.thisway.vehicle.triplog.interfaces.CurrentTripLogResponse;
 import org.thisway.vehicle.domain.VehicleReference;
 import org.thisway.vehicle.interfaces.VehicleTrackResponse;
