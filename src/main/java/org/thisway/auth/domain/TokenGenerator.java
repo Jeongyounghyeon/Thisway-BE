@@ -4,6 +4,6 @@ import org.thisway.member.domain.Member;
 
 public interface TokenGenerator {
 
-    AuthInfo.LoginResponse generator(Member member);
+    AuthToken generator(Member member);
 
 }

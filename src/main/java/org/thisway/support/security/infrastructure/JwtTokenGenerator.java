@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
-import org.thisway.auth.domain.AuthInfo;
+import org.thisway.auth.domain.AuthToken;
 import org.thisway.auth.domain.TokenGenerator;
 import org.thisway.company.domain.Company;
 import org.thisway.member.domain.Member;
@@ -20,7 +20,7 @@ public class JwtTokenGenerator implements TokenGenerator {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public AuthInfo.LoginResponse generator(Member member) {
+    public AuthToken generator(Member member) {
 
         // 1. Claims 생성 과정
         Map<String, Object> claims = new HashMap<>();
@@ -37,9 +37,6 @@ public class JwtTokenGenerator implements TokenGenerator {
         String accessToken = jwtTokenProvider.generateAccessToken(subject, claims);
         String refreshToken = jwtTokenProvider.generateAccessToken(subject, claims);
 
-        return AuthInfo.LoginResponse.builder()
-                .token(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return AuthToken.of(accessToken, refreshToken);
     }
 }

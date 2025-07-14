@@ -1,4 +1,4 @@
-package org.thisway.auth.domain;
+package org.thisway.auth.application;
 
 import lombok.Builder;
 import lombok.Value;

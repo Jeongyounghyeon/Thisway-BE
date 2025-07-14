@@ -44,10 +44,6 @@ class AuthServiceImplTest {
         String email = "test@example.com";
         String rawPassword = "password";
         String encodedPassword = "encodedPassword";
-        AuthCommand.LoginRequest request = AuthCommand.LoginRequest.builder()
-                .email(email)
-                .password(rawPassword)
-                .build();
 
         Company company = Company.builder()
                 .name("name")
@@ -68,20 +64,17 @@ class AuthServiceImplTest {
                 .memo("memo")
                 .build();
 
-        AuthInfo.LoginResponse expectedResponse = AuthInfo.LoginResponse.builder()
-                .token("access")
-                .refreshToken("refresh")
-                .build();
+        AuthToken expectedToken = new AuthToken("access", "refresh");
 
         when(memberReader.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
-        when(tokenGenerator.generator(member)).thenReturn(expectedResponse);
+        when(tokenGenerator.generator(member)).thenReturn(expectedToken);
 
         // when
-        AuthInfo.LoginResponse actualResponse = authService.login(request);
+        AuthToken actualResponse = authService.login(email, rawPassword);
 
         // then
-        assertSame(expectedResponse, actualResponse);
+        assertSame(expectedToken, actualResponse);
         verify(memberReader).findByEmailAndActiveTrue(email);
         verify(passwordEncoder).matches(rawPassword, encodedPassword);
         verify(tokenGenerator).generator(member);
@@ -92,16 +85,13 @@ class AuthServiceImplTest {
     void 로그인_회원_없음_예외() {
         // given
         String email = "test@example.com";
-        AuthCommand.LoginRequest request = AuthCommand.LoginRequest.builder()
-                .email(email)
-                .password("password")
-                .build();
+        String password = "password";
 
         when(memberReader.findByEmailAndActiveTrue(email)).thenReturn(Optional.empty());
 
         // when & then
         CustomException exception = assertThrows(CustomException.class,
-                () -> authService.login(request));
+                () -> authService.login(email, password));
         assertEquals(ErrorCode.AUTH_MEMBER_NOT_FOUND, exception.getErrorCode());
     }
 
@@ -112,10 +102,6 @@ class AuthServiceImplTest {
         String email = "test@example.com";
         String rawPassword = "password";
         String encodedPassword = "encodedPassword";
-        AuthCommand.LoginRequest request = AuthCommand.LoginRequest.builder()
-                .email(email)
-                .password(rawPassword)
-                .build();
 
         Company company = Company.builder()
                 .name("name")
@@ -141,7 +127,7 @@ class AuthServiceImplTest {
 
         // when & then
         CustomException exception = assertThrows(CustomException.class,
-                () -> authService.login(request));
+                () -> authService.login(email, rawPassword));
         assertEquals(ErrorCode.AUTH_PASSWORD_NOT_MATCH, exception.getErrorCode());
     }
 }

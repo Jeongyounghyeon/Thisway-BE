@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thisway.auth.application.AuthFacade;
-import org.thisway.auth.domain.AuthInfo;
+import org.thisway.auth.application.AuthInfo;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +22,14 @@ public class AuthController {
     private final AuthFacade authFacade;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthInfo.LoginResponse> login(
+    public ResponseEntity<AuthDto.LoginResponse> login(
             @Valid
             @RequestBody
             AuthDto.LoginRequest request
     ) {
-        AuthInfo.LoginResponse response = authFacade.login(request.toCommand());
+        AuthInfo.LoginResult authInfo = authFacade.login(request.toCommand());
+        var response = AuthDto.LoginResponse.from(authInfo);
+
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }

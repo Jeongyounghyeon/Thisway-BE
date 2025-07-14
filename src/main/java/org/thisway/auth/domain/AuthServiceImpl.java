@@ -18,12 +18,12 @@ public class AuthServiceImpl implements AuthService {
     private final TokenGenerator tokenGenerator;
 
     @Override
-    public AuthInfo.LoginResponse login(AuthCommand.LoginRequest request) {
+    public AuthToken login(String email, String password) {
 
-        Member member = memberReader.findByEmailAndActiveTrue(request.getEmail())
+        Member member = memberReader.findByEmailAndActiveTrue(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUTH_MEMBER_NOT_FOUND));
 
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword()))
+        if (!passwordEncoder.matches(password, member.getPassword()))
             throw new CustomException(ErrorCode.AUTH_PASSWORD_NOT_MATCH);
 
         return tokenGenerator.generator(member);
