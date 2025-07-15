@@ -1,12 +1,13 @@
 package org.thisway.auth.domain;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.thisway.auth.application.AuthCommand;
+import org.thisway.auth.application.AuthInfo;
+import org.thisway.auth.application.AuthServiceImpl;
 import org.thisway.company.domain.Company;
 import org.thisway.member.domain.Member;
 import org.thisway.member.domain.MemberReader;
@@ -29,7 +32,7 @@ class AuthServiceImplTest {
     private MemberReader memberReader;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderMatch passwordEncoder;
 
     @Mock
     private TokenGenerator tokenGenerator;
@@ -44,6 +47,10 @@ class AuthServiceImplTest {
         String email = "test@example.com";
         String rawPassword = "password";
         String encodedPassword = "encodedPassword";
+        var request = AuthCommand.LoginRequest.builder()
+                .email(email)
+                .password(rawPassword)
+                .build();
 
         Company company = Company.builder()
                 .name("name")
@@ -66,17 +73,24 @@ class AuthServiceImplTest {
 
         AuthToken expectedToken = new AuthToken("access", "refresh");
 
-        when(memberReader.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
+        when(memberReader.requireActiveMemberByEmail(email)).thenReturn(member);
         when(tokenGenerator.generator(member)).thenReturn(expectedToken);
+        doNothing().when(passwordEncoder)
+                .assertMatches(rawPassword, encodedPassword);
 
         // when
-        AuthToken actualResponse = authService.login(email, rawPassword);
+        AuthInfo.LoginResult actualResponse = authService.login(request);
 
         // then
-        assertSame(expectedToken, actualResponse);
-        verify(memberReader).findByEmailAndActiveTrue(email);
-        verify(passwordEncoder).matches(rawPassword, encodedPassword);
+        assertAll(
+                () -> assertEquals(
+                        expectedToken.getAccessToken(),
+                        actualResponse.getAccessToken()),
+                () -> assertEquals(
+                        expectedToken.getRefreshToken(),
+                        actualResponse.getRefreshToken()));
+        verify(memberReader).requireActiveMemberByEmail(email);
+        verify(passwordEncoder).assertMatches(rawPassword, encodedPassword);
         verify(tokenGenerator).generator(member);
     }
 
@@ -86,13 +100,20 @@ class AuthServiceImplTest {
         // given
         String email = "test@example.com";
         String password = "password";
+        var request = AuthCommand.LoginRequest.builder()
+                .email(email)
+                .password(password)
+                .build();
 
-        when(memberReader.findByEmailAndActiveTrue(email)).thenReturn(Optional.empty());
+        when(memberReader.requireActiveMemberByEmail(email))
+                .thenThrow(new CustomException(ErrorCode.AUTH_MEMBER_NOT_FOUND));
 
         // when & then
         CustomException exception = assertThrows(CustomException.class,
-                () -> authService.login(email, password));
+                () -> authService.login(request));
         assertEquals(ErrorCode.AUTH_MEMBER_NOT_FOUND, exception.getErrorCode());
+        verify(memberReader).requireActiveMemberByEmail(email);
+        verifyNoInteractions(passwordEncoder, tokenGenerator);
     }
 
     @Test
@@ -102,6 +123,10 @@ class AuthServiceImplTest {
         String email = "test@example.com";
         String rawPassword = "password";
         String encodedPassword = "encodedPassword";
+        var request = AuthCommand.LoginRequest.builder()
+                .email(email)
+                .password(rawPassword)
+                .build();
 
         Company company = Company.builder()
                 .name("name")
@@ -122,12 +147,14 @@ class AuthServiceImplTest {
                 .memo("memo")
                 .build();
 
-        when(memberReader.findByEmailAndActiveTrue(email)).thenReturn(Optional.of(member));
-        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(false);
+        when(memberReader.requireActiveMemberByEmail(email)).thenReturn(member);
+        doThrow(new CustomException(ErrorCode.AUTH_PASSWORD_NOT_MATCH))
+                .when(passwordEncoder)
+                .assertMatches(rawPassword, encodedPassword);
 
         // when & then
         CustomException exception = assertThrows(CustomException.class,
-                () -> authService.login(email, rawPassword));
+                () -> authService.login(request));
         assertEquals(ErrorCode.AUTH_PASSWORD_NOT_MATCH, exception.getErrorCode());
     }
 }

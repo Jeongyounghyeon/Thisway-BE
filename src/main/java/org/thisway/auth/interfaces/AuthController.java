@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thisway.auth.application.AuthFacade;
 import org.thisway.auth.application.AuthInfo;
+import org.thisway.auth.application.AuthService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthFacade authFacade;
+    private final AuthService authService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthDto.LoginResponse> login(
@@ -27,7 +27,7 @@ public class AuthController {
             @RequestBody
             AuthDto.LoginRequest request
     ) {
-        AuthInfo.LoginResult authInfo = authFacade.login(request.toCommand());
+        AuthInfo.LoginResult authInfo = authService.login(request.toCommand());
         var response = AuthDto.LoginResponse.from(authInfo);
 
         return ResponseEntity.status(HttpStatus.OK)
