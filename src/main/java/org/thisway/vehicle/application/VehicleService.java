@@ -170,7 +170,7 @@ public class VehicleService {
     }
 
     private void validateCompanyAdminPermission(Member member) {
-        if (!member.getRole().getLowerOrEqualRoles().contains(MemberRole.COMPANY_ADMIN)) {
+        if (!member.getRole().getAccessibleRoles().contains(MemberRole.COMPANY_ADMIN)) {
             throw new CustomException(ErrorCode.AUTH_UNAUTHORIZED);
         }
     }

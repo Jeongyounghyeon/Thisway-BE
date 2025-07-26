@@ -19,7 +19,15 @@ public enum MemberRole {
 
     private final int level;
 
-    public Set<MemberRole> getLowerOrEqualRoles() {
+    public Set<MemberRole> getAccessibleRoles() {
+        if (this == ADMIN) {
+            return Set.of(MemberRole.ADMIN, MemberRole.COMPANY_CHEF);
+        } else {
+            return this.getLowerOrEqualRoles();
+        }
+    }
+
+    private Set<MemberRole> getLowerOrEqualRoles() {
         return Arrays.stream(MemberRole.values())
                 .filter(role -> role.level <= this.level)
                 .collect(Collectors.toSet());

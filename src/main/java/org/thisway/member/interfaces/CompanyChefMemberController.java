@@ -1,51 +1,52 @@
 package org.thisway.member.interfaces;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.thisway.member.application.CompanyChefMemberService;
-
-import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import org.thisway.member.application.MemberFacade;
+import org.thisway.member.application.MemberDto;
+import org.thisway.member.application.MemberInfo;
+import org.thisway.support.security.dto.request.MemberDetails;
 
 @RestController
 @RequestMapping("/api/company-chef/members")
 @RequiredArgsConstructor
 public class CompanyChefMemberController {
 
-    private final CompanyChefMemberService companyChefMemberService;
+    private final MemberFacade memberFacade;
+    private final CompanyChefMemberApiContractMapper companyChefMemberApiContractMapper;
 
     @GetMapping("/{id}")
-    public ResponseEntity<CompanyChefMemberDetailResponse> getMemberDetail(@PathVariable Long id) {
-        CompanyChefMemberDetailResponse response = CompanyChefMemberDetailResponse.from(
-                companyChefMemberService.getMemberDetail(id)
-        );
+    public ResponseEntity<CompanyChefMemberApiContract.MemberDetailResponse> getMemberDetail(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long id
+    ) {
+        MemberInfo.Member member = memberFacade.retrieveMember(id, memberDetails.getUsername());
+        CompanyChefMemberApiContract.MemberDetailResponse response = companyChefMemberApiContractMapper.toMemberDetailResponse(member);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
     }
 
     @GetMapping
-    public ResponseEntity<CompanyChefMembersResponse> getMembers(
-            @ModelAttribute CompanyChefMemberSearchRequest search,
+    public ResponseEntity<CompanyChefMemberApiContract.MembersResponse> getMembers(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @ModelAttribute CompanyChefMemberApiContract.MemberSearchRequest search,
             @PageableDefault(
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
             ) Pageable pageable
     ) {
-        CompanyChefMembersResponse response = CompanyChefMembersResponse.from(
-                companyChefMemberService.getMembers(pageable, search.toCriteria()));
+        MemberDto.SearchMemberRequest searchQuery = companyChefMemberApiContractMapper.from(search, memberDetails.getCompanyId());
+        Page<MemberInfo.Member> members = memberFacade.retrieveMembers(searchQuery, memberDetails.getUsername(), pageable);
+        CompanyChefMemberApiContract.MembersResponse response = companyChefMemberApiContractMapper.toMembersResponse(members);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);
@@ -53,38 +54,44 @@ public class CompanyChefMemberController {
 
     @PostMapping
     public ResponseEntity<Void> registerMember(
-            @RequestBody @Validated CompanyChefMemberRegisterRequest request
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @RequestBody @Validated CompanyChefMemberApiContract.MemberRegisterRequest request
     ) {
-        companyChefMemberService.registerMember(request.toMemberRegisterInput());
+        MemberDto.RegisterMemberRequest member = companyChefMemberApiContractMapper.from(request, memberDetails.getCompanyId());
+        memberFacade.registerMember(member, memberDetails.getUsername());
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateMember(
             @PathVariable long id,
-            @RequestBody @Validated CompanyChefMemberUpdateRequest request
+            @RequestBody @Validated CompanyChefMemberApiContract.MemberUpdateRequest request,
+            @AuthenticationPrincipal MemberDetails memberDetails
     ) {
-        companyChefMemberService.updateMember(request.toMemberUpdateInput(id));
+        MemberDto.UpdateMemberRequest member = companyChefMemberApiContractMapper.from(id, request);
+        memberFacade.updateMember(member, memberDetails.getUsername());
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-        companyChefMemberService.deleteMember(id);
+    public ResponseEntity<Void> deleteMember(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable Long id
+    ) {
+        memberFacade.deleteMember(id, memberDetails.getUsername());
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                .build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<CompanyChefMemberSummaryResponse> summary() {
-        CompanyChefMemberSummaryResponse response = CompanyChefMemberSummaryResponse.from(
-                companyChefMemberService.summary()
-        );
+    public ResponseEntity<CompanyChefMemberApiContract.MemberSummaryResponse> summary(
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
+
+        MemberInfo.MemberSummary summary = memberFacade.summary(memberDetails.getCompanyId(), memberDetails.getUsername());
+        CompanyChefMemberApiContract.MemberSummaryResponse response = companyChefMemberApiContractMapper.toMemberSummaryResponse(summary);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(response);

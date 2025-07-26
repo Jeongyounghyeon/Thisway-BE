@@ -37,6 +37,7 @@ public enum ErrorCode {
     // 업체 에러 x1xxx
     COMPANY_NOT_FOUND("11000", "회사 정보를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
     COMPANY_ALREADY_EXIST("11001", "이미 존재하는 회사입니다.", HttpStatus.BAD_REQUEST),
+    COMPANY_ACCESS_DENIED("11002", "해당 회사에 대한 접근 권한이 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 멤버 에러 x2xxx
     MEMBER_NOT_FOUND("12000", "사용자 정보를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
@@ -47,7 +48,7 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST),
     MEMBER_ACCESS_DENIED("12006", "해당 멤버에 대한 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
     MEMBER_REGISTER_DENIED("12007", "해당 멤버에 대한 생성 권한이 없습니다.", HttpStatus.FORBIDDEN),
-
+    MEMBER_INVALID_MEMBER_ROLE("12008", "잘못된 멤버 권한입니다.", HttpStatus.BAD_REQUEST),
 
     // 인증 에러 x3xxx
     AUTH_INVALID_VERIFICATION_CODE("13000", "잘못된 인증코드입니다.", HttpStatus.BAD_REQUEST),

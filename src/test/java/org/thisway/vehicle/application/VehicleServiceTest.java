@@ -207,7 +207,7 @@ class VehicleServiceTest {
         MemberRole mockRole = mock(MemberRole.class);
         Set<MemberRole> roles = new HashSet<>();
         roles.add(MemberRole.COMPANY_ADMIN);
-        when(mockRole.getLowerOrEqualRoles()).thenReturn(roles);
+        when(mockRole.getAccessibleRoles()).thenReturn(roles);
 
         Member mockMember = mock(Member.class);
         when(mockMember.getCompany()).thenReturn(company);
@@ -297,7 +297,7 @@ class VehicleServiceTest {
         MemberRole mockRole = mock(MemberRole.class);
         Set<MemberRole> roles = new HashSet<>();
         roles.add(MemberRole.COMPANY_ADMIN);
-        when(mockRole.getLowerOrEqualRoles()).thenReturn(roles);
+        when(mockRole.getAccessibleRoles()).thenReturn(roles);
 
         Member mockMember = mock(Member.class);
         when(mockMember.getCompany()).thenReturn(mockCompany);
@@ -362,7 +362,7 @@ class VehicleServiceTest {
         MemberRole mockRole = mock(MemberRole.class);
         Set<MemberRole> roles = new HashSet<>();
         roles.add(MemberRole.COMPANY_ADMIN);
-        when(mockRole.getLowerOrEqualRoles()).thenReturn(roles);
+        when(mockRole.getAccessibleRoles()).thenReturn(roles);
 
         Member mockMember = mock(Member.class);
         when(mockMember.getCompany()).thenReturn(mockCompany);
@@ -416,7 +416,7 @@ class VehicleServiceTest {
         MemberRole mockRole = mock(MemberRole.class);
         Set<MemberRole> roles = new HashSet<>();
         roles.add(MemberRole.COMPANY_ADMIN);
-        when(mockRole.getLowerOrEqualRoles()).thenReturn(roles);
+        when(mockRole.getAccessibleRoles()).thenReturn(roles);
 
         Member mockMember = mock(Member.class);
         when(mockMember.getCompany()).thenReturn(mockCompany);
